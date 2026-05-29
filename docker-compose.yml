@@ -1,0 +1,59 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: secureops-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: secureops
+      POSTGRES_PASSWORD: secureops_dev_password
+      POSTGRES_DB: secureops_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - secureops_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U secureops -d secureops_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  migrate:
+    image: migrate/migrate:latest
+    container_name: secureops-migrate
+    restart: "no"
+    volumes:
+      - ./backend/migrations:/migrations
+    command:
+      [
+        "-path",
+        "/migrations",
+        "-database",
+        "postgres://secureops:secureops_dev_password@postgres:5432/secureops_db?sslmode=disable",
+        "up"
+      ]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: secureops-backend
+    restart: unless-stopped
+    environment:
+      APP_ENV: development
+      PORT: 8080
+      DATABASE_URL: postgres://secureops:secureops_dev_password@postgres:5432/secureops_db?sslmode=disable
+      JWT_SECRET: dev1223
+      BCRYPT_COST: 12
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+volumes:
+  secureops_postgres_data:
