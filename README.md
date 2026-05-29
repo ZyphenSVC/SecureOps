@@ -2,11 +2,13 @@
 
 SecureOps is a Dockerized Go/PostgreSQL backend for a secure internal operations platform. It implements authentication, JWT-protected routes, role-based access control, permission-guarded admin endpoints, and audit logging.
 
+## [Check out the related blog](https://zyphensvc.com/blog/2026/05/29)
+
 ## Tech Stack
 
 - Go
 - PostgreSQL
-- Docker Compose
+- Docker
 - JWT
 - bcrypt
 - RBAC
